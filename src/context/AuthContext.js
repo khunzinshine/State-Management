@@ -1,67 +1,65 @@
-import React, { createContext, useEffect, useState } from 'react';
+import { createContext, useEffect, useReducer } from 'react';
 
-import { useHistory } from 'react-router-dom';
+const INITIAL_STATE = {
+  user: JSON.parse(localStorage.getItem('user')) || null,
+  token: JSON.parse(localStorage.getItem('token')) || null,
+  loading: false,
+  error: null,
+};
 
-const AuthContext = createContext();
-const { Provider } = AuthContext;
+export const AuthContext = createContext(INITIAL_STATE);
 
-const TOKEN = 'token';
-const REFRESH_TOKEN = 'refreshToken';
-const AUTH_INFO = 'auth';
+const AuthReducer = (state, action) => {
+  switch (action.type) {
+    case 'LOGIN_START':
+      return {
+        user: null,
+        loading: true,
+        error: null,
+      };
+    case 'LOGIN_SUCCESS':
+      return {
+        user: action.payload,
+        token: action.payload,
+        loading: false,
+        error: null,
+      };
+    case 'LOGIN_FAILURE':
+      return {
+        user: null,
+        loading: false,
+        error: action.payload,
+      };
+    case 'LOGOUT':
+      return {
+        user: null,
+        loading: false,
+        error: null,
+      };
+    default:
+      return state;
+  }
+};
 
-const AuthProvider = ({ children }) => {
-  const history = useHistory();
-  const [authState, setAuthState] = useState({});
+export const AuthContextProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(AuthReducer, INITIAL_STATE);
 
   useEffect(() => {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN);
-    const token = localStorage.getItem(TOKEN);
-    const auth = localStorage.getItem(AUTH_INFO);
-
-    setAuthState({
-      token: token ? JSON.parse(token) : {},
-      refreshToken: refreshToken ? JSON.parse(refreshToken) : {},
-      auth: auth ? JSON.parse(auth) : {},
-    });
-  }, []);
+    localStorage.setItem('user', JSON.stringify(state.user));
+    localStorage.setItem('token', JSON.stringify(state.token));
+  }, [state.user, state.token]);
 
   const logout = () => {
-    localStorage.removeItem(REFRESH_TOKEN);
-    localStorage.removeItem(TOKEN);
-    localStorage.removeItem(AUTH_INFO);
-    setAuthState({});
-    history.push('/auth/login');
-  };
-
-  const setAuthInfo = ({ auth, token, refreshToken }) => {
-    localStorage.setItem(AUTH_INFO, JSON.stringify(auth));
-    localStorage.setItem(TOKEN, JSON.stringify(token));
-    localStorage.setItem(REFRESH_TOKEN, JSON.stringify(refreshToken));
-
-    setAuthState({
-      token,
-      refreshToken,
-      auth,
-    });
-  };
-
-  const isAuthenticated = () => {
-    if (
-      !authState.token ||
-      !authState.token.token ||
-      !authState.token.expiredAt
-    ) {
-      return false;
-    }
-    return true;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
   const isExpired = () => {
     if (
-      authState.token &&
-      authState.token.token &&
-      authState.token.expiredAt &&
-      new Date().getTime() > new Date(authState.token.expiredAt).getTime()
+      state.token &&
+      state.token.token &&
+      state.token.expiredAt &&
+      new Date().getTime() > new Date(state.token.expiredAt).getTime()
     ) {
       logout();
       return true;
@@ -70,18 +68,18 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <Provider
+    <AuthContext.Provider
       value={{
+        user: state.user,
+        token: state.token,
+        loading: state.loading,
+        error: state.error,
+        dispatch,
         logout,
-        authState,
-        isAuthenticated,
         isExpired,
-        setAuthState: (authInfo) => setAuthInfo(authInfo),
       }}
     >
       {children}
-    </Provider>
+    </AuthContext.Provider>
   );
 };
-
-export { AuthProvider, AuthContext };
