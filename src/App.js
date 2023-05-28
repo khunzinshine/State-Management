@@ -12,12 +12,17 @@ import {
 import React, { Suspense, lazy, useContext } from 'react';
 
 import { AuthContext } from './context/AuthContext';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 const Login = lazy(() => import('./views/auth/Login'));
 const Player = lazy(() => import('./views/players/Player'));
 const Team = lazy(() => import('./views/teams/Team'));
 
-const loading = <div>Loading...</div>;
+const loading = (
+  <div className='card flex justify-content-center mt-5'>
+    <ProgressSpinner />
+  </div>
+);
 
 const ProtectedRoute = ({ children }) => {
   const { user, token } = useContext(AuthContext);
