@@ -1,34 +1,34 @@
-import 'primereact/resources/themes/saga-blue/theme.css';
-import 'primereact/resources/primereact.min.css';
-import 'primeicons/primeicons.css';
-import 'primeflex/primeflex.css';
+import "primereact/resources/themes/saga-blue/theme.css";
+import "primereact/resources/primereact.min.css";
+import "primeicons/primeicons.css";
+import "primeflex/primeflex.css";
 
 import {
   Navigate,
   Route,
   BrowserRouter as Router,
-  Routes,
-} from 'react-router-dom';
-import React, { Suspense, lazy, useContext } from 'react';
+  Routes
+} from "react-router-dom";
+import React, { Suspense, lazy, useContext } from "react";
 
-import { AuthContext } from './context/AuthContext';
-import { ProgressSpinner } from 'primereact/progressspinner';
+import { AuthContext } from "./context/AuthContext";
+import { ProgressSpinner } from "primereact/progressspinner";
 
-const Login = lazy(() => import('./views/auth/Login'));
-const Player = lazy(() => import('./views/players/Player'));
-const Team = lazy(() => import('./views/teams/Team'));
+const Login = lazy(() => import("./views/auth/Login"));
+const Player = lazy(() => import("./views/players/Player"));
+const Team = lazy(() => import("./views/teams/Team"));
 
 const loading = (
-  <div className='card flex justify-content-center mt-5'>
+  <div className="card flex justify-content-center mt-5">
     <ProgressSpinner />
   </div>
 );
 
 const ProtectedRoute = ({ children }) => {
-  const { user, token } = useContext(AuthContext);
+  const { user, token, isExpired } = useContext(AuthContext);
 
-  if (!user || !token) {
-    return <Navigate to='/' />;
+  if (!user || !token || isExpired()) {
+    return <Navigate to="/" />;
   }
   return children;
 };
@@ -38,10 +38,10 @@ const App = () => {
     <Suspense fallback={loading}>
       <Router>
         <Routes>
-          <Route path='/' element={<Login />} />
-          <Route path='team'>
+          <Route path="/" element={<Login />} />
+          <Route path="team">
             <Route
-              path='list'
+              path="list"
               element={
                 <ProtectedRoute>
                   <Team />
@@ -49,9 +49,9 @@ const App = () => {
               }
             />
           </Route>
-          <Route path='player'>
+          <Route path="player">
             <Route
-              path='list'
+              path="list"
               element={
                 <ProtectedRoute>
                   <Player />
