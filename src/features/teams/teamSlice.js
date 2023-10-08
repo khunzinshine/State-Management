@@ -1,46 +1,60 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   data: [],
   detail: null,
-  returnMessage: null,
+  returnMessage: null
 };
 
 const Slice = createSlice({
-  name: 'team',
+  name: "team",
   initialState: initialState,
   reducers: {
-    createTeam: (state = initialState, { payload }) => {
-      const newTeam = {
-        id: Date.now(),
-        data: payload,
-      };
-      let stateData = state.data.map((s) => s.data);
-      let checkedName = stateData.some((s) => s.name === newTeam.data.name);
-      if (checkedName) {
-        state.returnMessage = 'Team Name already existed!';
-        return state;
+    createTeam: (state, { payload }) => {
+      const isNameUnique = !state.data.some(
+        team => team.data.name === payload.name
+      );
+
+      if (isNameUnique) {
+        const newTeam = {
+          id: Date.now(),
+          data: payload
+        };
+        state.data.push(newTeam);
+      } else {
+        state.returnMessage = "Team Name already exists!";
       }
-      state.data?.push(newTeam);
     },
     updateTeam: (state, { payload }) => {
       const { id, data } = payload;
+      const isNameUnique = state.data.some(
+        team => team.data.name === data.name && team.id !== id
+      );
 
-      let stateData = state.data.map((s) => s.data);
-      let checkedName = stateData.some((s) => s.name === data.name);
-      if (checkedName) {
-        state.returnMessage = 'Team Name already existed!';
-        return state;
-      }
+      if (!isNameUnique) {
+        const updatedData = state.data.map(team => {
+          if (team.id === id) {
+            return {
+              ...team,
+              data: data
+            };
+          }
+          return team;
+        });
 
-      const team = state.data.find((t) => t.id === id);
-      if (team) {
-        team.data = data;
+        return {
+          ...state,
+          data: updatedData,
+          returnMessage: null
+        };
+      } else {
+        return { ...state, returnMessage: "Team Name already exists!" };
       }
     },
+
     deleteTeam: (state, { payload }) => {
       const id = payload;
-      let index = state.data.filter((i) => i.id !== id);
+      let index = state.data.filter(i => i.id !== id);
       state.data = index;
     },
     detailTeam: (state, { payload }) => {
@@ -49,10 +63,19 @@ const Slice = createSlice({
     resetMessage: (state, { payload }) => {
       return { ...state, returnMessage: null };
     },
-  },
+    teamList: (state, { payload }) => {
+      return { ...state, data: payload };
+    }
+  }
 });
 
-export const team = (state) => state.team;
-export const { createTeam, updateTeam, deleteTeam, detailTeam, resetMessage } =
-  Slice.actions;
+export const team = state => state.team;
+export const {
+  createTeam,
+  updateTeam,
+  deleteTeam,
+  detailTeam,
+  resetMessage,
+  teamList
+} = Slice.actions;
 export default Slice.reducer;
